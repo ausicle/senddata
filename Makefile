@@ -10,6 +10,7 @@ ANSI_COLOR_MAGENTA = \033[0;35m
 ANSI_COLOR_CYAN    = \033[0;36m
 ANSI_COLOR_RESET   = \033[0m
 
+compile: senddata
 server: senddata
 	@printf "$(ANSI_COLOR_YELLOW)--> Running server (receive)$(ANSI_COLOR_RESET)\n"
 	./senddata receive

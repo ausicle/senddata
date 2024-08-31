@@ -43,13 +43,17 @@ main(int argc, char **argv)
 	ssize_t buflen = sizeof(buf);
 
 	/* Set mode and options */
+	if (argc < 2) {
+		print_help();
+		exit(EXIT_FAILURE);
+	}
 	switch (argv[1][0]) {
 		case 'r':
 			role = SERVER;
 			break;
 		case 's':
 			role = CLIENT;
-			if (argv[2][0] == '-') {
+			if (argc < 3 || argv[2][0] == '-') {
 				print_help();
 				exit(EXIT_FAILURE);
 			}
@@ -67,6 +71,7 @@ main(int argc, char **argv)
 		switch (opt) {
 			case '?':
 				print_help();
+				exit(0);
 				break;
 			case 'a':
 				addrstr = optarg;
@@ -78,9 +83,6 @@ main(int argc, char **argv)
 				input_mode = READ_FILE;
 				output_mode = SAVE_FILE;
 				filename = optarg;
-				break;
-			case 'b':
-				strcpy(buf, optarg);
 				break;
 			default:
 				output_mode = ECHO;
@@ -123,7 +125,7 @@ main(int argc, char **argv)
 					while (1) {
 						bytes_read = read(recvfd, &ch, 1);
 						if (bytes_read < 0) {
-							perror("error read socket");
+							perror("cannot read socket");
 							goto close_recv_socket;
 						} else if (bytes_read == 0) {
 							puts("Connection closed by peer");
@@ -151,7 +153,7 @@ main(int argc, char **argv)
 			goto close_recv_socket;
 		case CLIENT:
 			if (connect(sockfd, (struct sockaddr*) &addr_in, addrlen)) {
-				perror("cannot connect to address error");
+				perror("cannot connect to address");
 				exit(3);
 			}
 			switch (input_mode) {
