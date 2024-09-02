@@ -99,7 +99,7 @@ start_server(int sockfd, struct sockaddr_in addr_in)
 		return -1;
 	}
 	printf("SERVER is RUNNING\nADDR: %X\nPORT: %u\n",
-	       addr_in.sin_addr.s_addr, addr_in.sin_port);
+	       addr_in.sin_addr.s_addr, ntohs(addr_in.sin_port));
 	if ((recvfd = accept(sockfd, (struct sockaddr *)&addr_in, &addrlen)) <
 	    0) {
 		return -1;
