@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+unsigned int verbosity = 0;
+
 struct netconfig_in {
 	char *address;
 	unsigned long port;
@@ -24,7 +26,7 @@ typedef struct {
 int
 parse_args(int argc, char **argv, args_t *args)
 {
-	char opt;
+	int opt;
 	/* Set mode and options */
 	if (argc < 2) {
 		print_help();
@@ -50,7 +52,8 @@ parse_args(int argc, char **argv, args_t *args)
 	}
 	++argv;
 	--argc;
-	while ((opt = getopt(argc, argv, "?::p:f:a:")) >= 0) {
+	args->output = ECHO;
+	while ((opt = getopt(argc, argv, "?::v::p:f:a:")) >= 0) {
 		switch (opt) {
 		case '?':
 			print_help();
@@ -58,6 +61,9 @@ parse_args(int argc, char **argv, args_t *args)
 			break;
 		case 'a':
 			args->network.address = optarg;
+			break;
+		case 'v':
+			verbosity = 1;
 			break;
 		case 'p':
 			args->network.port = strtoul(optarg, NULL, 0);
@@ -67,8 +73,6 @@ parse_args(int argc, char **argv, args_t *args)
 			args->input = READ_FILE;
 			args->output = SAVE_FILE;
 			break;
-		default:
-			args->output = ECHO;
 		}
 	}
 	return 0;

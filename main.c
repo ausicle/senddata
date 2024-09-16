@@ -2,10 +2,12 @@
 #include "helper/help.h"
 #include "helper/networking.h"
 #include <arpa/inet.h>
+#include <ifaddrs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #ifndef DEFAULT_PORT
@@ -61,7 +63,7 @@ main(int argc, char **argv)
 				puts("Connection closed by peer");
 			goto close_recv_socket;
 		case SAVE_FILE:
-			fd = open(args.filename, O_CREAT | O_WRONLY,
+			fd = open(args.filename, O_CREAT | O_WRONLY | O_TRUNC,
 			          S_IRUSR | S_IWUSR);
 			if (fd < 0) {
 				perror("cannot open file");

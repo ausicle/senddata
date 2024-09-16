@@ -2,10 +2,13 @@
 #define HELPER_NETWORKING_H
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <ifaddrs.h>
 #include <netinet/in.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
+#include <sys/sendfile.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -18,14 +21,11 @@
 int
 write_socket_to_file(int sockfd, int fd)
 {
-	char buf[1024] = {0};
+	int buf[1024] = {0};
 	ssize_t bufsize = sizeof(buf);
-	ssize_t bytes_received, bytes_read = 0;
-	if (sockfd < 0) {
-		errno = EBADF;
-		return -1;
-	}
-	if (fd < 0) {
+	size_t bytes_received = 0;
+	ssize_t bytes_received_total = 0;
+	if (fd < 0 || sockfd < 0) {
 		errno = EBADF;
 		return -1;
 	}
@@ -35,13 +35,14 @@ write_socket_to_file(int sockfd, int fd)
 			return -1;
 		} else if (bytes_received == 0) {
 			break;
-		} else if (buf[bytes_received - 1] == EOF) {
-			break;
 		}
 		write(fd, buf, bytes_received);
-		bytes_read += bytes_received;
+		bytes_received_total += bytes_received;
+		if (verbosity)
+			printf("Got %zu bytes, total %zd bytes\n",
+			       bytes_received, bytes_received_total);
 	}
-	return bytes_read;
+	return bytes_received_total;
 }
 
 /**
@@ -87,6 +88,22 @@ initialize_addr_in(char *addr_str, in_port_t port)
 	return addr_in;
 }
 
+/* void
+ * print_addrs(void)
+ * {
+ *         struct ifaddrs *addrs, *tmpaddrs;
+ *         getifaddrs(&addrs);
+ *         tmpaddrs = addrs;
+ *         while (tmpaddrs)
+ *         {
+ *                 if (tmpaddrs->ifa_addr &&
+ *                     tmpaddrs->ifa_addr->sa_family == PF_INET)
+ *                         printf("%s: %d\n", tmpaddrs->ifa_name,
+ * tmpaddrs->ifa_addr); tmpaddrs = tmpaddrs->ifa_next;
+ *         }
+ *         freeifaddrs(addrs);
+ * } */
+
 int
 start_server(int sockfd, struct sockaddr_in addr_in)
 {
@@ -111,22 +128,8 @@ int
 send_stdin(int sockfd)
 {
 	char buf[1024];
-	int i = 0;
-	while (1) {
-		buf[i++] = getchar();
-		switch (buf[i - 1]) {
-		case '\n':
-			send(sockfd, buf, i, 0);
-			buf[i++] = '\0';
-			i = 0;
-			break;
-		case EOF:
-			send(sockfd, buf, i, 0);
-			buf[i++] = '\0';
-			i = 0;
-			return 0;
-		}
-	}
+	while (fgets(buf, sizeof(buf), stdin) != NULL)
+		send(sockfd, buf, strlen(buf), 0);
 	return 0;
 }
 
@@ -134,9 +137,15 @@ int
 send_file(const char *filename, int sockfd)
 {
 	int fd;
-	struct stat file_stat;
 	off_t len;
+	struct stat file_stat;
+#if defined(__APPLE__) || defined(__FreeBSD__)
 	struct sf_hdtr hdtr = {NULL, 0, NULL, 0};
+	int bytes_sent = 0;
+#elif defined(__linux__)
+	ssize_t bytes_sent = 0;
+#elif defined(__unix__)
+#endif
 	if ((fd = open(filename, O_RDONLY)) < 0) {
 		return -1;
 	}
@@ -145,7 +154,13 @@ send_file(const char *filename, int sockfd)
 	}
 	len = file_stat.st_size;
 	while (1) {
-		if (sendfile(fd, sockfd, 0, &len, &hdtr, 0) < 0) {
+#if defined(__APPLE__) || defined(__FreeBSD__)
+		bytes_sent = sendfile(fd, sockfd, 0, &len, &hdtr, 0);
+#elif defined(__linux__)
+		bytes_sent = sendfile(sockfd, fd, NULL, len);
+#elif defined(__unix__)
+#endif
+		if (bytes_sent < 0) {
 			close(fd);
 			return -1;
 		}
@@ -156,21 +171,6 @@ send_file(const char *filename, int sockfd)
 	}
 	close(fd);
 	return 0;
-	/*
-	char buf[1024];
-	ssize_t buflen = sizeof(buf);
-	int bytes_read;
-	if (fd == NULL) {
-	        perror("cannot read file descriptor");
-	        return -1;
-	}
-	while (1) {
-	        if ((bytes_read = fread(buf, 1, buflen, fd)) > 0)
-	                printf("Bytes send: %zd\n",
-	                       send(sockfd, buf, buflen, 0));
-	}
-	return 0;
-	*/
 }
 
 #endif

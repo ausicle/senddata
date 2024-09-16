@@ -7,8 +7,9 @@ print_help(void)
 {
 	fprintf(stderr, "\
 Usage:\n\
-	senddata receive [-p port] [-f file]\n\
-	senddata send <ip_addr> [-p port] [-f file]\n\
+	senddata receive\n\
+	senddata send <ip_addr>\n\
+	[-v verbosity] [-p port] [-f file]\n\
 ");
 }
 #endif
