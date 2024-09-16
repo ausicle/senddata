@@ -9,10 +9,14 @@ struct netconfig_in {
 	unsigned long port;
 };
 
+enum action_t { SEND, RECEIVE } action;
+enum input_t { STDIN, READ_FILE } input;
+enum output_t { ECHO, SAVE_FILE } output;
+
 typedef struct {
-	enum action_t { SEND, RECEIVE } action;
-	enum input_t { STDIN, READ_FILE } input;
-	enum output_t { ECHO, SAVE_FILE } output;
+	enum action_t action;
+	enum input_t input;
+	enum output_t output;
 	char *filename;
 	struct netconfig_in network;
 } args_t;
