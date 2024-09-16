@@ -1,6 +1,6 @@
 ADDR ?= 127.0.0.1
 
-TARGET ?= senddata
+TARGET ?= senddata.out
 OBJDIR = .obj
 SRCS := $(wildcard *.c)
 OBJS := $(SRCS:%.c=$(OBJDIR)/%.o)
@@ -18,7 +18,7 @@ ANSI_COLOR_MAGENTA := \033[0;35m
 ANSI_COLOR_CYAN    := \033[0;36m
 ANSI_COLOR_RESET   := \033[0m
 
-.PHONY: server client compile clean format
+.PHONY: compile clean format
 
 $(TARGET): $(OBJS)
 	@printf "$(ANSI_COLOR_GREEN)--> Linking $@$(ANSI_COLOR_RESET)\n"
@@ -27,7 +27,7 @@ $(OBJDIR)/%.o: %.c | $(OBJDIR)
 	@printf "$(ANSI_COLOR_GREEN)--> Compiling $@$(ANSI_COLOR_RESET)\n"
 	$(CC) $(CFLAGS) -c -o $@ $<
 $(OBJDIR):
-	mkdir $(OBJDIR)
+	mkdir -p $(OBJDIR)
 format: $(FORMATS)
 	@printf "$(ANSI_COLOR_RED)--> Formatting$(ANSI_COLOR_RESET)\n"
 	clang-format --verbose -i $^
