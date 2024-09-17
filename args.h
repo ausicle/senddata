@@ -16,7 +16,7 @@ struct netconfig_in {
 
 enum action_t { SEND, RECEIVE } action;
 enum input_t { STDIN, READ_FILE } input;
-enum output_t { ECHO, SAVE_FILE } output;
+enum output_t { STDOUT, SAVE_FILE } output;
 
 typedef struct {
 	enum action_t action;
@@ -26,6 +26,13 @@ typedef struct {
 	struct netconfig_in network;
 } args_t;
 
+/**
+ * Parse args into args
+ * @param[in] argc
+ * @param[in] argv
+ * @param[out] args variable stored parsed data
+ * @return 0 on succeed
+ */
 int parse_args(int argc, char **argv, args_t *args);
 
 #endif

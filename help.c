@@ -3,10 +3,10 @@
 void
 print_help(void)
 {
-	fprintf(stderr, "\
+	puts("\
 Usage:\n\
 	senddata receive\n\
 	senddata send <ip_addr>\n\
-	[-v verbosity] [-p port] [-f file]\n\
+	[-v verbosity] [-p port] [-f file]\
 ");
 }

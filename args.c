@@ -34,7 +34,7 @@ parse_args(int argc, char **argv, args_t *args)
 	}
 	++argv;
 	--argc;
-	args->output = ECHO;
+	args->output = STDOUT;
 	while ((opt = getopt(argc, argv, "?::v::p:f:a:")) >= 0) {
 		switch (opt) {
 		case '?':

@@ -4,8 +4,8 @@
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <netinet/in.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
@@ -59,10 +59,9 @@ int
 initialize_socket(void)
 {
 	int sockfd, opt = 1;
-	/* Initialize socket file descriptor */
-	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+	sockfd = socket(PF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0)
 		return -1;
-	}
 	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) <
 	    0) {
 		close(sockfd);
@@ -83,11 +82,10 @@ initialize_addr_in(char *addr_str, in_port_t port)
 {
 	struct sockaddr_in addr_in;
 	addr_in.sin_family = AF_INET;
-	if (addr_str[0] != '0') {
-		if (inet_pton(AF_INET, addr_str, &addr_in.sin_addr) <= 0) {
-			perror("Invalid address");
-			exit(EXIT_FAILURE);
-		}
+	if ((addr_str[0] != '0') &&
+	    (inet_pton(AF_INET, addr_str, &addr_in.sin_addr) <= 0)) {
+		perror("Invalid address");
+		exit(EXIT_FAILURE);
 	} else
 		addr_in.sin_addr.s_addr = 0;
 	addr_in.sin_port = htons(port);
@@ -115,12 +113,15 @@ start_server(int sockfd, struct sockaddr_in addr_in)
 {
 	int recvfd;
 	socklen_t addrlen = sizeof(addr_in);
-	if (bind(sockfd, (struct sockaddr *)&addr_in, addrlen) < 0)return -1;
-	if (listen(sockfd, 3) < 0)return -1;
+	if (bind(sockfd, (struct sockaddr *)&addr_in, addrlen) < 0)
+		return -1;
+	if (listen(sockfd, 3) < 0)
+		return -1;
 	printf("SERVER is RUNNING\nADDR: %X\nPORT: %u\n",
 	       addr_in.sin_addr.s_addr, ntohs(addr_in.sin_port));
-	if ((recvfd = accept(sockfd, (struct sockaddr *)&addr_in, &addrlen)) <
-	    0) return -1;
+	recvfd = accept(sockfd, (struct sockaddr *)&addr_in, &addrlen);
+	if (recvfd < 0)
+		return -1;
 	return recvfd;
 }
 
@@ -146,8 +147,11 @@ sendfile_name(const char *filename, int sockfd)
 	ssize_t bytes_sent = 0;
 #elif defined(__unix__)
 #endif
-	if ((filefd = open(filename, O_RDONLY)) < 0) return -1;
-	if (fstat(filefd, &file_stat) < 0) return -1;
+	filefd = open(filename, O_RDONLY);
+	if (filefd < 0)
+		return -1;
+	if (fstat(filefd, &file_stat) < 0)
+		return -1;
 	len = file_stat.st_size;
 	while (1) {
 #if defined(__APPLE__) || defined(__FreeBSD__)
