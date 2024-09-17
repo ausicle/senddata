@@ -8,10 +8,13 @@
 #include <string.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
-#include <sys/sendfile.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#if defined(__linux__)
+#include <sys/sendfile.h>
+#endif
 
 /**
  * Write socket data to a file
