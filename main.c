@@ -1,14 +1,11 @@
-#include "helper/args.h"
-#include "helper/help.h"
-#include "helper/networking.h"
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include "args.h"        // for action_t, input_t, netconfig_in, out...
+#include "networking.h"  // for write_socket_to_file, initialize_add...
+#include <netinet/in.h>         // for sockaddr_in
+#include <stdio.h>              // for perror, puts
+#include <sys/_types/_s_ifmt.h> // for S_IRUSR, S_IWUSR
+#include <sys/fcntl.h>          // for open, O_CREAT, O_TRUNC, O_WRONLY
+#include <sys/socket.h>         // for shutdown, connect, SHUT_RD, SHUT_WR
+#include <unistd.h>             // for close, STDOUT_FILENO
 
 #ifndef DEFAULT_PORT
 #define DEFAULT_PORT 43337
@@ -44,7 +41,7 @@ main(int argc, char **argv)
 				perror("cannot send stdin");
 			break;
 		case READ_FILE:
-			if (send_file(args.filename, sockfd) < 0)
+			if (sendfile_name(args.filename, sockfd) < 0)
 				perror("file cannot be sent");
 			break;
 		}

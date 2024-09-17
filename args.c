@@ -1,27 +1,9 @@
-#ifndef HELPER_ARGS_H
-#define HELPER_ARGS_H
+#include "args.h"
 #include "help.h"
 #include <stdlib.h>
 #include <unistd.h>
 
-unsigned int verbosity = 0;
-
-struct netconfig_in {
-	char *address;
-	unsigned long port;
-};
-
-enum action_t { SEND, RECEIVE } action;
-enum input_t { STDIN, READ_FILE } input;
-enum output_t { ECHO, SAVE_FILE } output;
-
-typedef struct {
-	enum action_t action;
-	enum input_t input;
-	enum output_t output;
-	char *filename;
-	struct netconfig_in network;
-} args_t;
+int verbosity = 0;
 
 int
 parse_args(int argc, char **argv, args_t *args)
@@ -77,5 +59,3 @@ parse_args(int argc, char **argv, args_t *args)
 	}
 	return 0;
 }
-
-#endif

@@ -5,6 +5,7 @@
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
@@ -15,6 +16,8 @@
 #if defined(__linux__)
 #include <sys/sendfile.h>
 #endif
+
+extern int verbosity;
 
 /**
  * Write socket data to a file
@@ -112,18 +115,12 @@ start_server(int sockfd, struct sockaddr_in addr_in)
 {
 	int recvfd;
 	socklen_t addrlen = sizeof(addr_in);
-	if (bind(sockfd, (struct sockaddr *)&addr_in, addrlen) < 0) {
-		return -1;
-	}
-	if (listen(sockfd, 3) < 0) {
-		return -1;
-	}
+	if (bind(sockfd, (struct sockaddr *)&addr_in, addrlen) < 0)return -1;
+	if (listen(sockfd, 3) < 0)return -1;
 	printf("SERVER is RUNNING\nADDR: %X\nPORT: %u\n",
 	       addr_in.sin_addr.s_addr, ntohs(addr_in.sin_port));
 	if ((recvfd = accept(sockfd, (struct sockaddr *)&addr_in, &addrlen)) <
-	    0) {
-		return -1;
-	}
+	    0) return -1;
 	return recvfd;
 }
 
@@ -137,9 +134,9 @@ send_stdin(int sockfd)
 }
 
 int
-send_file(const char *filename, int sockfd)
+sendfile_name(const char *filename, int sockfd)
 {
-	int fd;
+	int filefd;
 	off_t len;
 	struct stat file_stat;
 #if defined(__APPLE__) || defined(__FreeBSD__)
@@ -149,22 +146,18 @@ send_file(const char *filename, int sockfd)
 	ssize_t bytes_sent = 0;
 #elif defined(__unix__)
 #endif
-	if ((fd = open(filename, O_RDONLY)) < 0) {
-		return -1;
-	}
-	if (fstat(fd, &file_stat) < 0) {
-		return -1;
-	}
+	if ((filefd = open(filename, O_RDONLY)) < 0) return -1;
+	if (fstat(filefd, &file_stat) < 0) return -1;
 	len = file_stat.st_size;
 	while (1) {
 #if defined(__APPLE__) || defined(__FreeBSD__)
-		bytes_sent = sendfile(fd, sockfd, 0, &len, &hdtr, 0);
+		bytes_sent = sendfile(filefd, sockfd, 0, &len, &hdtr, 0);
 #elif defined(__linux__)
-		bytes_sent = sendfile(sockfd, fd, NULL, len);
+		bytes_sent = sendfile(sockfd, filefd, NULL, len);
 #elif defined(__unix__)
 #endif
 		if (bytes_sent < 0) {
-			close(fd);
+			close(filefd);
 			return -1;
 		}
 		if (errno == EAGAIN)
@@ -172,7 +165,7 @@ send_file(const char *filename, int sockfd)
 		else
 			break;
 	}
-	close(fd);
+	close(filefd);
 	return 0;
 }
 

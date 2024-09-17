@@ -5,7 +5,7 @@ OBJDIR = .obj
 SRCS := $(wildcard *.c)
 OBJS := $(SRCS:%.c=$(OBJDIR)/%.o)
 DEPS := $(OBJS:.o=.d)
-FORMATS := $(SRCS) $(wildcard */*.h)
+FORMATS := $(SRCS) $(wildcard *.h)
 
 CC := clang
 CFLAGS += -Wall -Wextra -pedantic -pedantic-errors -MMD -MP

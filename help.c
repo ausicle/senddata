@@ -1,5 +1,3 @@
-#ifndef HELPER_HELP_H
-#define HELPER_HELP_H
 #include <stdio.h>
 
 void
@@ -12,4 +10,3 @@ Usage:\n\
 	[-v verbosity] [-p port] [-f file]\n\
 ");
 }
-#endif
