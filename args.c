@@ -1,5 +1,6 @@
 #include "args.h"
 #include "help.h"
+#include <getopt.h>
 #include <stdlib.h>
 #include <unistd.h>
 
