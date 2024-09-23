@@ -23,14 +23,15 @@ extern int verbosity;
  * Write socket data to a file
  * @params[in] socket file descriptor
  * @params[out] file descriptor
+ * @return bytes_received_total total bytes received
  */
 int
 write_socket_to_file(int sockfd, int fd)
 {
 	int buf[1024] = {0};
 	ssize_t bufsize = sizeof(buf);
-	size_t bytes_received = 0;
-	ssize_t bytes_received_total = 0;
+	ssize_t bytes_received = 0;
+	size_t bytes_received_total = 0;
 	if (fd < 0 || sockfd < 0) {
 		errno = EBADF;
 		return -1;
