@@ -51,6 +51,7 @@ main(int argc, char **argv)
 			}
 		}
 		shutdown(sockfd, SHUT_WR);
+		break;
 	case RECEIVE:
 		/* Start server */
 		recvfd = start_server(sockfd, addr_in);
@@ -83,6 +84,7 @@ main(int argc, char **argv)
 		}
 		shutdown(recvfd, SHUT_RD);
 		close(recvfd);
+		break;
 	}
 	close(sockfd);
 	return 0;
