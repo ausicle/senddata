@@ -8,7 +8,7 @@ DEPS := $(OBJS:.o=.d)
 FORMATS := $(SRCS) $(wildcard *.h)
 
 CC := clang
-CFLAGS += -Wall -Wextra -pedantic -pedantic-errors -MMD -MP
+CFLAGS += -Wall -Wextra -pedantic -pedantic-errors -MMD -MP -std=c99
 
 ANSI_COLOR_RED     := \033[0;31m
 ANSI_COLOR_GREEN   := \033[0;32m
