@@ -83,10 +83,11 @@ initialize_addr_in(char *addr_str, in_port_t port)
 {
 	struct sockaddr_in addr_in;
 	addr_in.sin_family = AF_INET;
-	if ((addr_str[0] != '0') &&
-	    (inet_pton(AF_INET, addr_str, &addr_in.sin_addr) <= 0)) {
-		perror("Invalid address");
-		exit(EXIT_FAILURE);
+	if (addr_str[0] != '0') {
+		if (inet_pton(AF_INET, addr_str, &addr_in.sin_addr) <= 0) {
+			perror("Invalid address");
+			exit(EXIT_FAILURE);
+		}
 	} else
 		addr_in.sin_addr.s_addr = 0;
 	addr_in.sin_port = htons(port);

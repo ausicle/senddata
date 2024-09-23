@@ -1,10 +1,10 @@
-#include "args.h"               // for action_t, input_t, netconfig_in, out...
-#include "networking.h"         // for write_socket_to_file, initialize_add...
-#include <netinet/in.h>         // for sockaddr_in
-#include <stdio.h>              // for perror, puts
-#include <sys/fcntl.h>          // for open, O_CREAT, O_TRUNC, O_WRONLY
-#include <sys/socket.h>         // for shutdown, connect, SHUT_RD, SHUT_WR
-#include <unistd.h>             // for close, STDOUT_FILENO
+#include "args.h"
+#include "networking.h"
+#include <netinet/in.h>
+#include <stdio.h>
+#include <sys/fcntl.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #ifndef DEFAULT_PORT
 #define DEFAULT_PORT 43337
