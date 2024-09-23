@@ -2,7 +2,6 @@
 #include "networking.h"         // for write_socket_to_file, initialize_add...
 #include <netinet/in.h>         // for sockaddr_in
 #include <stdio.h>              // for perror, puts
-#include <sys/_types/_s_ifmt.h> // for S_IRUSR, S_IWUSR
 #include <sys/fcntl.h>          // for open, O_CREAT, O_TRUNC, O_WRONLY
 #include <sys/socket.h>         // for shutdown, connect, SHUT_RD, SHUT_WR
 #include <unistd.h>             // for close, STDOUT_FILENO

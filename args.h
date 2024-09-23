@@ -2,7 +2,7 @@
 #define ARGS_H
 
 /**
- * Set verbosity to >0 for output verbosely
+ * Set verbosity to >0 for verbose output
  */
 extern int verbosity;
 
@@ -14,9 +14,9 @@ struct netconfig_in {
 	unsigned long port;
 };
 
-enum action_t { SEND, RECEIVE } action;
-enum input_t { STDIN, READ_FILE } input;
-enum output_t { STDOUT, SAVE_FILE } output;
+enum action_t { SEND, RECEIVE };
+enum input_t { STDIN, READ_FILE };
+enum output_t { STDOUT, SAVE_FILE };
 
 typedef struct {
 	enum action_t action;
