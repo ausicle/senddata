@@ -20,39 +20,6 @@
 extern int verbosity;
 
 /**
- * Write socket data to a file
- * @params[in] socket file descriptor
- * @params[out] file descriptor
- * @return bytes_received_total total bytes received
- */
-int
-write_socket_to_file(int sockfd, int fd)
-{
-	int buf[1024] = {0};
-	ssize_t bufsize = sizeof(buf);
-	ssize_t bytes_received = 0;
-	size_t bytes_received_total = 0;
-	if (fd < 0 || sockfd < 0) {
-		errno = EBADF;
-		return -1;
-	}
-	while (1) {
-		bytes_received = recv(sockfd, buf, bufsize, 0);
-		if (bytes_received < 0) {
-			return -1;
-		} else if (bytes_received == 0) {
-			break;
-		}
-		write(fd, buf, bytes_received);
-		bytes_received_total += bytes_received;
-		if (verbosity)
-			printf("Got %zu bytes, total %zd bytes\n",
-			       bytes_received, bytes_received_total);
-	}
-	return bytes_received_total;
-}
-
-/**
  * Initialize socket with SO_REUSEADDR and SO_REUSEPORT
  * @return socket file descriptor
  */
@@ -93,22 +60,6 @@ initialize_addr_in(char *addr_str, in_port_t port)
 	addr_in.sin_port = htons(port);
 	return addr_in;
 }
-
-/* void
- * print_addrs(void)
- * {
- *         struct ifaddrs *addrs, *tmpaddrs;
- *         getifaddrs(&addrs);
- *         tmpaddrs = addrs;
- *         while (tmpaddrs)
- *         {
- *                 if (tmpaddrs->ifa_addr &&
- *                     tmpaddrs->ifa_addr->sa_family == PF_INET)
- *                         printf("%s: %d\n", tmpaddrs->ifa_name,
- * tmpaddrs->ifa_addr); tmpaddrs = tmpaddrs->ifa_next;
- *         }
- *         freeifaddrs(addrs);
- * } */
 
 int
 start_server(int sockfd, struct sockaddr_in addr_in)
@@ -173,6 +124,39 @@ sendfile_name(const char *filename, int sockfd)
 	}
 	close(filefd);
 	return 0;
+}
+
+/**
+ * Write socket data to a file
+ * @params[in] socket file descriptor
+ * @params[out] file descriptor
+ * @return bytes_received_total total bytes received
+ */
+int
+write_socket_to_file(int sockfd, int fd)
+{
+	int buf[1024] = {0};
+	ssize_t bufsize = sizeof(buf);
+	ssize_t bytes_received = 0;
+	size_t bytes_received_total = 0;
+	if (fd < 0 || sockfd < 0) {
+		errno = EBADF;
+		return -1;
+	}
+	while (1) {
+		bytes_received = recv(sockfd, buf, bufsize, 0);
+		if (bytes_received < 0) {
+			return -1;
+		} else if (bytes_received == 0) {
+			break;
+		}
+		write(fd, buf, bytes_received);
+		bytes_received_total += bytes_received;
+		if (verbosity)
+			printf("Got %zu bytes, total %zd bytes\n",
+			       bytes_received, bytes_received_total);
+	}
+	return bytes_received_total;
 }
 
 #endif
