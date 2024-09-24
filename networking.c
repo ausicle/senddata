@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,10 +20,6 @@
 
 extern int verbosity;
 
-/**
- * Initialize socket with SO_REUSEADDR and SO_REUSEPORT
- * @return socket file descriptor
- */
 int
 initialize_socket(void)
 {
@@ -45,18 +42,37 @@ initialize_socket(void)
 	return sockfd;
 }
 
+int
+resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
+{
+	// Convert addr to network format
+	if (inet_pton(AF_INET, addr_str, &addr_in->sin_addr) == 1)
+		return 0;
+
+	// Resolve hostname if above fails
+	struct addrinfo hints = {0}, *res;
+	hints.ai_family = addr_in->sin_family;
+	hints.ai_socktype = SOCK_STREAM;
+
+	int ret = getaddrinfo(addr_str, NULL, &hints, &res);
+	if (ret != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
+		return -1;
+	}
+	struct sockaddr_in *resolved_addr = (struct sockaddr_in *)res->ai_addr;
+	addr_in->sin_family = resolved_addr->sin_family;
+	addr_in->sin_addr = resolved_addr->sin_addr;
+
+	return 0;
+}
+
 struct sockaddr_in
 initialize_addr_in(char *addr_str, in_port_t port)
 {
 	struct sockaddr_in addr_in;
 	addr_in.sin_family = AF_INET;
-	if (addr_str[0] != '0') {
-		if (inet_pton(AF_INET, addr_str, &addr_in.sin_addr) <= 0) {
-			perror("Invalid address");
-			exit(EXIT_FAILURE);
-		}
-	} else
-		addr_in.sin_addr.s_addr = 0;
+	if (resolve_addr(addr_str, &addr_in) < 0)
+		exit(EXIT_FAILURE);
 	addr_in.sin_port = htons(port);
 	return addr_in;
 }

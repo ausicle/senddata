@@ -3,18 +3,18 @@
 #include <netinet/in.h>
 
 /**
- * Write socket data to a file
- * @params[in] sockfd socket to read from
- * @params[in] filefd file to write to
- * @return total bytes received from sockfd
- */
-int write_socket_to_file(int sockfd, int filefd);
-
-/**
  * Initialize socket with SO_REUSEADDR and SO_REUSEPORT
  * @return socket file descriptor
  */
 int initialize_socket(void);
+
+/**
+ * Resolve address from hostname
+ * @params[in] addr_str string of address
+ * @params[in,out] addr_in structure sockaddr_in to be output
+ * @return 0 on succeed, -1 on error
+ */
+int resolve_addr(char *addr_str, struct sockaddr_in *addr_in);
 
 /**
  * Initialize sockaddr_in with address and port
@@ -46,5 +46,13 @@ int send_stdin(int sockfd);
  * @return 0 on succeed, -1 on error
  */
 int sendfile_name(const char *filename, int sockfd);
+
+/**
+ * Write socket data to a file
+ * @params[in] sockfd socket to read from
+ * @params[in] filefd file to write to
+ * @return total bytes received from sockfd
+ */
+int write_socket_to_file(int sockfd, int filefd);
 
 #endif
