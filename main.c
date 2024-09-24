@@ -34,20 +34,21 @@ main(int argc, char **argv)
 	switch (args.action) {
 	case SEND:
 		/* Connect to server */
-		if (connect(sockfd, (struct sockaddr *)&addr_in,
-		            sizeof(addr_in)) < 0) {
+		if (connect(sockfd, (struct sockaddr *)&addr_in, sizeof(addr_in)) < 0) {
 			close(sockfd);
 			perror("cannot connect to address");
 			return 2;
 		} else {
 			switch (args.input) {
 			case STDIN:
-				if (send_stdin(sockfd) < 0)
+				if (send_stdin(sockfd) < 0) {
 					perror("cannot send stdin");
+				}
 				break;
 			case READ_FILE:
-				if (sendfile_name(args.filename, sockfd) < 0)
+				if (sendfile_name(args.filename, sockfd) < 0) {
 					perror("file cannot be sent");
+				}
 				break;
 			}
 		}
@@ -65,21 +66,22 @@ main(int argc, char **argv)
 		switch (args.output) {
 		case STDOUT:
 			puts("------------------------");
-			if (write_socket_to_file(recvfd, STDOUT_FILENO) < 0)
+			if (write_socket_to_file(recvfd, STDOUT_FILENO) < 0) {
 				perror("could not write socket to stdout");
-			else
+			} else {
 				puts("Connection closed by peer");
+			}
 			break;
 		case SAVE_FILE:
-			filefd =
-			    open(args.filename, O_CREAT | O_WRONLY | O_TRUNC,
-			         S_IRUSR | S_IWUSR);
+			filefd = open(args.filename, O_CREAT | O_WRONLY | O_TRUNC,
+			              S_IRUSR | S_IWUSR);
 			if (filefd < 0) {
 				perror("cannot open file");
 				break;
 			}
-			if (write_socket_to_file(recvfd, filefd) < 0)
+			if (write_socket_to_file(recvfd, filefd) < 0) {
 				perror("cannot write socket to file");
+			}
 			close(filefd);
 			break;
 		}

@@ -1,6 +1,6 @@
-IndentWidth: 8
-TabWidth: 8
-UseTab: AlignWithSpaces
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForIndentation
 AlwaysBreakAfterDefinitionReturnType: All
 BreakBeforeBraces: Custom
 BraceWrapping:

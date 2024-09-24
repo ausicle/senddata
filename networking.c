@@ -25,16 +25,15 @@ initialize_socket(void)
 {
 	int sockfd, opt = 1;
 	sockfd = socket(PF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0)
+	if (sockfd < 0) {
 		return -1;
-	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) <
-	    0) {
+	}
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 		close(sockfd);
 		return -1;
 	}
 #ifdef SO_REUSEPORT
-	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) <
-	    0) {
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
 		close(sockfd);
 		return -1;
 	}
@@ -46,8 +45,9 @@ int
 resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
 {
 	// Convert addr to network format
-	if (inet_pton(AF_INET, addr_str, &addr_in->sin_addr) == 1)
+	if (inet_pton(AF_INET, addr_str, &addr_in->sin_addr) == 1) {
 		return 0;
+	}
 
 	// Resolve hostname if above fails
 	struct addrinfo hints = {0}, *res;
@@ -71,8 +71,9 @@ initialize_addr_in(char *addr_str, in_port_t port)
 {
 	struct sockaddr_in addr_in;
 	addr_in.sin_family = AF_INET;
-	if (resolve_addr(addr_str, &addr_in) < 0)
+	if (resolve_addr(addr_str, &addr_in) < 0) {
 		exit(EXIT_FAILURE);
+	}
 	addr_in.sin_port = htons(port);
 	return addr_in;
 }
@@ -82,15 +83,18 @@ start_server(int sockfd, struct sockaddr_in addr_in)
 {
 	int recvfd;
 	socklen_t addrlen = sizeof(addr_in);
-	if (bind(sockfd, (struct sockaddr *)&addr_in, addrlen) < 0)
+	if (bind(sockfd, (struct sockaddr *)&addr_in, addrlen) < 0) {
 		return -1;
-	if (listen(sockfd, 3) < 0)
+	}
+	if (listen(sockfd, 3) < 0) {
 		return -1;
-	printf("SERVER is RUNNING\nADDR: %X\nPORT: %u\n",
-	       addr_in.sin_addr.s_addr, ntohs(addr_in.sin_port));
+	}
+	printf("SERVER is RUNNING\nADDR: %X\nPORT: %u\n", addr_in.sin_addr.s_addr,
+	       ntohs(addr_in.sin_port));
 	recvfd = accept(sockfd, (struct sockaddr *)&addr_in, &addrlen);
-	if (recvfd < 0)
+	if (recvfd < 0) {
 		return -1;
+	}
 	return recvfd;
 }
 
@@ -98,8 +102,9 @@ int
 send_stdin(int sockfd)
 {
 	char buf[1024];
-	while (fgets(buf, sizeof(buf), stdin) != NULL)
+	while (fgets(buf, sizeof(buf), stdin) != NULL) {
 		send(sockfd, buf, strlen(buf), 0);
+	}
 	return 0;
 }
 
@@ -117,10 +122,12 @@ sendfile_name(const char *filename, int sockfd)
 #elif defined(__unix__)
 #endif
 	filefd = open(filename, O_RDONLY);
-	if (filefd < 0)
+	if (filefd < 0) {
 		return -1;
-	if (fstat(filefd, &file_stat) < 0)
+	}
+	if (fstat(filefd, &file_stat) < 0) {
 		return -1;
+	}
 	len = file_stat.st_size;
 	while (1) {
 #if defined(__APPLE__) || defined(__FreeBSD__)
@@ -133,10 +140,11 @@ sendfile_name(const char *filename, int sockfd)
 			close(filefd);
 			return -1;
 		}
-		if (errno == EAGAIN)
+		if (errno == EAGAIN) {
 			continue;
-		else
+		} else {
 			break;
+		}
 	}
 	close(filefd);
 	return 0;
@@ -168,9 +176,10 @@ write_socket_to_file(int sockfd, int fd)
 		}
 		write(fd, buf, bytes_received);
 		bytes_received_total += bytes_received;
-		if (verbosity)
-			printf("Got %zu bytes, total %zd bytes\n",
-			       bytes_received, bytes_received_total);
+		if (verbosity) {
+			printf("Got %zu bytes, total %zd bytes\n", bytes_received,
+			       bytes_received_total);
+		}
 	}
 	return bytes_received_total;
 }

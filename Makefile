@@ -8,7 +8,8 @@ DEPS := $(OBJS:.o=.d)
 FORMATS := $(SRCS) $(wildcard *.h)
 
 CC := clang
-CFLAGS += -Wall -Wextra -pedantic -pedantic-errors -MMD -MP -std=c99
+CSTD := c99
+CFLAGS += -Wall -Wextra -pedantic -pedantic-errors -MMD -MP -std=$(CSTD)
 
 ANSI_COLOR_RED     := \033[0;31m
 ANSI_COLOR_GREEN   := \033[0;32m
@@ -30,6 +31,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 format: $(FORMATS)
 	@printf "$(ANSI_COLOR_RED)--> Formatting$(ANSI_COLOR_RESET)\n"
+	clang-tidy --fix $^ -- -std=$(CSTD)
 	clang-format --verbose -i $^
 clean:
 	@printf "$(ANSI_COLOR_RED)--> Cleaning$(ANSI_COLOR_RESET)\n"
