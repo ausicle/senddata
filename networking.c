@@ -40,6 +40,28 @@ initialize_socket(void)
 }
 
 int
+print_if_addrs(void)
+{
+	struct ifaddrs *ifaddr, *ifa;
+	char ip_str[INET6_ADDRSTRLEN];
+
+	if (getifaddrs(&ifaddr) == -1) {
+		return -1;
+	}
+
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+		if (ifa->ifa_addr->sa_family == AF_INET) {
+			struct sockaddr_in *addr_in = (struct sockaddr_in *)ifa->ifa_addr;
+			inet_ntop(AF_INET, &addr_in->sin_addr, ip_str, sizeof(ip_str));
+			printf("Interface: %s, Address: %s\n", ifa->ifa_name, ip_str);
+		}
+	}
+
+	freeifaddrs(ifaddr);
+	return 0;
+}
+
+int
 resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
 {
 	// Convert addr to network format
@@ -48,10 +70,10 @@ resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
 	}
 
 	// Resolve hostname if above fails
+#if defined(__APPLE__) || _POSIX_C_SOURCE >= 200112L
 	struct addrinfo hints = {0}, *res;
 	hints.ai_family = addr_in->sin_family;
 	hints.ai_socktype = SOCK_STREAM;
-
 	int ret = getaddrinfo(addr_str, NULL, &hints, &res);
 	if (ret != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
@@ -60,7 +82,17 @@ resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
 	struct sockaddr_in *resolved_addr = (struct sockaddr_in *)res->ai_addr;
 	addr_in->sin_family = resolved_addr->sin_family;
 	addr_in->sin_addr = resolved_addr->sin_addr;
-
+#else
+	struct hostent *host;
+	struct in_addr **addr_list;
+	host = gethostbyname(addr_str);
+	if (host == NULL) {
+		fprintf(stderr, "gethostbyname: %s\n", hstrerror(h_errno));
+		return -1;
+	}
+	addr_list = (struct in_addr **)host->h_addr_list;
+	addr_in->sin_addr = *addr_list[0];
+#endif
 	return 0;
 }
 
@@ -80,6 +112,12 @@ int
 start_server(int sockfd, struct sockaddr_in addr_in)
 {
 	int recvfd;
+	char address[INET_ADDRSTRLEN];
+#if defined(__APPLE__)
+	char hostname[sysconf(_SC_HOST_NAME_MAX)];
+#else
+	char hostname[HOST_NAME_MAX];
+#endif
 	socklen_t addrlen = sizeof(addr_in);
 	if (bind(sockfd, (struct sockaddr *)&addr_in, addrlen) < 0) {
 		return -1;
@@ -87,8 +125,19 @@ start_server(int sockfd, struct sockaddr_in addr_in)
 	if (listen(sockfd, 3) < 0) {
 		return -1;
 	}
-	printf("SERVER is RUNNING\nADDR: %X\nPORT: %u\n", addr_in.sin_addr.s_addr,
-	       ntohs(addr_in.sin_port));
+	if (inet_ntop(AF_INET, &addr_in.sin_addr, address, INET_ADDRSTRLEN) ==
+	    NULL) {
+		return -1;
+	}
+	puts("SERVER is RUNNING");
+	gethostname(hostname, sizeof(hostname));
+	printf("HOSTNAME: %s\n", hostname);
+	if (addr_in.sin_addr.s_addr == 0) {
+		print_if_addrs();
+	} else {
+		printf("ADDR: %s\n", address);
+	}
+	printf("PORT: %u\n", ntohs(addr_in.sin_port));
 	recvfd = accept(sockfd, (struct sockaddr *)&addr_in, &addrlen);
 	if (recvfd < 0) {
 		return -1;

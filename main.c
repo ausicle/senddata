@@ -1,5 +1,6 @@
 #include "args.h"
 #include "networking.h"
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <sys/fcntl.h>
@@ -13,6 +14,7 @@
 
 int filefd, sockfd, recvfd;
 int status;
+char address[INET_ADDRSTRLEN];
 struct sockaddr_in addr_in;
 
 int
@@ -38,19 +40,24 @@ main(int argc, char **argv)
 			close(sockfd);
 			perror("cannot connect to address");
 			return 2;
-		} else {
-			switch (args.input) {
-			case STDIN:
-				if (send_stdin(sockfd) < 0) {
-					perror("cannot send stdin");
-				}
-				break;
-			case READ_FILE:
-				if (sendfile_name(args.filename, sockfd) < 0) {
-					perror("file cannot be sent");
-				}
-				break;
+		}
+		if (inet_ntop(AF_INET, &addr_in.sin_addr, address, INET_ADDRSTRLEN) ==
+		    NULL) {
+			perror("cannot get address");
+			return -1;
+		}
+		printf("Connected to address: %s\n", address);
+		switch (args.input) {
+		case STDIN:
+			if (send_stdin(sockfd) < 0) {
+				perror("cannot send stdin");
 			}
+			break;
+		case READ_FILE:
+			if (sendfile_name(args.filename, sockfd) < 0) {
+				perror("file cannot be sent");
+			}
+			break;
 		}
 		shutdown(sockfd, SHUT_WR);
 		break;
@@ -62,6 +69,7 @@ main(int argc, char **argv)
 			perror("cannot start server");
 			return 2;
 		}
+
 		/* Output mode */
 		switch (args.output) {
 		case STDOUT:
