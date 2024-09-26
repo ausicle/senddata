@@ -1,5 +1,3 @@
-#ifndef HELPER_NETWORKING_H
-#define HELPER_NETWORKING_H
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
@@ -183,5 +181,3 @@ write_socket_to_file(int sockfd, int fd)
 	}
 	return bytes_received_total;
 }
-
-#endif
