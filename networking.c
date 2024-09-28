@@ -1,6 +1,14 @@
+#if defined(__APPLE__)
+#include <sys/socket.h>
+#define _POSIX_C_SOURCE 200112L
+#else
+#define _POSIX_C_SOURCE 200112L
+#include <sys/socket.h>
+#endif
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
+#include <limits.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -8,7 +16,6 @@
 #include <string.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -166,7 +173,6 @@ sendfile_name(const char *filename, int sockfd)
 	int bytes_sent = 0;
 #elif defined(__linux__)
 	ssize_t bytes_sent = 0;
-#elif defined(__unix__)
 #endif
 	filefd = open(filename, O_RDONLY);
 	if (filefd < 0) {
@@ -181,7 +187,6 @@ sendfile_name(const char *filename, int sockfd)
 		bytes_sent = sendfile(filefd, sockfd, 0, &len, &hdtr, 0);
 #elif defined(__linux__)
 		bytes_sent = sendfile(sockfd, filefd, NULL, len);
-#elif defined(__unix__)
 #endif
 		if (bytes_sent < 0) {
 			close(filefd);
