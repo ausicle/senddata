@@ -1,9 +1,9 @@
-#if defined(__APPLE__)
-#include <sys/socket.h>
+#if defined(__linux__)
 #define _POSIX_C_SOURCE 200112L
+#include <sys/socket.h>
 #else
-#define _POSIX_C_SOURCE 200112L
 #include <sys/socket.h>
+#define _POSIX_C_SOURCE 200112L
 #endif
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -77,7 +77,6 @@ resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
 	}
 
 	// Resolve hostname if above fails
-#if defined(__APPLE__) || _POSIX_C_SOURCE >= 200112L
 	struct addrinfo hints = {0}, *res;
 	hints.ai_family = addr_in->sin_family;
 	hints.ai_socktype = SOCK_STREAM;
@@ -89,17 +88,6 @@ resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
 	struct sockaddr_in *resolved_addr = (struct sockaddr_in *)res->ai_addr;
 	addr_in->sin_family = resolved_addr->sin_family;
 	addr_in->sin_addr = resolved_addr->sin_addr;
-#else
-	struct hostent *host;
-	struct in_addr **addr_list;
-	host = gethostbyname(addr_str);
-	if (host == NULL) {
-		fprintf(stderr, "gethostbyname: %s\n", hstrerror(h_errno));
-		return -1;
-	}
-	addr_list = (struct in_addr **)host->h_addr_list;
-	addr_in->sin_addr = *addr_list[0];
-#endif
 	return 0;
 }
 
@@ -120,11 +108,7 @@ start_server(int sockfd, struct sockaddr_in addr_in)
 {
 	int recvfd;
 	char address[INET_ADDRSTRLEN];
-#if defined(__APPLE__)
 	char hostname[sysconf(_SC_HOST_NAME_MAX)];
-#else
-	char hostname[HOST_NAME_MAX];
-#endif
 	socklen_t addrlen = sizeof(addr_in);
 	if (bind(sockfd, (struct sockaddr *)&addr_in, addrlen) < 0) {
 		return -1;
@@ -166,13 +150,19 @@ int
 sendfile_name(const char *filename, int sockfd)
 {
 	int filefd;
-	off_t len;
+	off_t filesize, total_bytes_sent = 0;
 	struct stat file_stat;
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__)
+	int ret;
 	struct sf_hdtr hdtr = {NULL, 0, NULL, 0};
-	int bytes_sent = 0;
+	off_t sendlen;
+#elif defined(__FreeBSD__)
+	int ret;
+	struct sf_hdtr hdtr = {NULL, 0, NULL, 0};
+	off_t bytes_sent;
+	off_t sendlen;
 #elif defined(__linux__)
-	ssize_t bytes_sent = 0;
+	ssize_t sendlen;
 #endif
 	filefd = open(filename, O_RDONLY);
 	if (filefd < 0) {
@@ -181,22 +171,46 @@ sendfile_name(const char *filename, int sockfd)
 	if (fstat(filefd, &file_stat) < 0) {
 		return -1;
 	}
-	len = file_stat.st_size;
+	filesize = file_stat.st_size;
 	while (1) {
-#if defined(__APPLE__) || defined(__FreeBSD__)
-		bytes_sent = sendfile(filefd, sockfd, 0, &len, &hdtr, 0);
-#elif defined(__linux__)
-		bytes_sent = sendfile(sockfd, filefd, NULL, len);
-#endif
-		if (bytes_sent < 0) {
-			close(filefd);
-			return -1;
-		}
-		if (errno == EAGAIN) {
-			continue;
+		sendlen = filesize - total_bytes_sent;
+#if defined(__APPLE__)
+		ret = sendfile(filefd, sockfd, total_bytes_sent, &sendlen, &hdtr, 0);
+		if (ret < 0) {
+			if (errno == EAGAIN) {
+				continue;
+			} else {
+				return -1;
+			}
 		} else {
 			break;
 		}
+		total_bytes_sent += sendlen;
+#elif defined(__FreeBSD__)
+		ret = sendfile(filefd, sockfd, total_bytes_sent, sendlen, &hdtr,
+		               &bytes_sent, 0);
+		if (ret < 0) {
+			if (errno == EAGAIN) {
+				continue;
+			} else {
+				return -1;
+			}
+		} else {
+			break;
+		}
+		total_bytes_sent += bytes_sent;
+#elif defined(__linux__)
+		sendlen = sendfile(sockfd, filefd, &total_bytes_sent, sendlen);
+		if (sendlen < 0) {
+			if (errno == EAGAIN) {
+				continue;
+			} else {
+				return -1;
+			}
+		} else {
+			break;
+		}
+#endif
 	}
 	close(filefd);
 	return 0;
