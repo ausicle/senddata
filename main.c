@@ -82,6 +82,7 @@ main(int argc, char **argv)
 				if (sendfile_name(filename_encrypted, sockfd) < 0) {
 					perror("file cannot be sent");
 				}
+				unlink(filename_encrypted);
 				break;
 			default:
 				if (sendfile_name(o.filename, sockfd) < 0) {
@@ -135,6 +136,7 @@ main(int argc, char **argv)
 			close(filefd);
 			if (o.enc.algo == AES256) {
 				file_decrypt(o.enc.key, filename_encrypted, o.filename);
+				unlink(filename_encrypted);
 			}
 			break;
 		}
