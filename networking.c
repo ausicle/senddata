@@ -86,6 +86,7 @@ resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
 	struct sockaddr_in *resolved_addr = (struct sockaddr_in *)res->ai_addr;
 	addr_in->sin_family = resolved_addr->sin_family;
 	addr_in->sin_addr = resolved_addr->sin_addr;
+	freeaddrinfo(res);
 	return 0;
 }
 
