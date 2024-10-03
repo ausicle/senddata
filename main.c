@@ -39,7 +39,7 @@ main(int argc, char **argv)
 	}
 	if (o.enc.algo == AES256) {
 		if (RAND_bytes(iv, sizeof(iv)) != 1) {
-			return -1;
+			return 1;
 		}
 		strncpy(filename_encrypted, o.filename, sizeof(filename_encrypted));
 		strncat(filename_encrypted, ENCRYPTED_FILE_EXT,
@@ -66,7 +66,7 @@ main(int argc, char **argv)
 		if (inet_ntop(AF_INET, &addr_in.sin_addr, address, INET_ADDRSTRLEN) ==
 		    NULL) {
 			perror("cannot get address");
-			return -1;
+			return 2;
 		}
 		printf("Connected to address: %s\n", address);
 		switch (o.input) {
@@ -109,7 +109,7 @@ main(int argc, char **argv)
 				bytes_received = recv(recvfd, buf, sizeof(buf), 0);
 				if (bytes_received < 0) {
 					perror("could not write socket to stdout");
-					return -1;
+					return 2;
 				} else if (bytes_received == 0) {
 					puts("Connection closed by peer");
 					break;
