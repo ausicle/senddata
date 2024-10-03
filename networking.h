@@ -33,13 +33,6 @@ struct sockaddr_in initialize_addr_in(char *addr_str, in_port_t port);
 int start_server(int sockfd, struct sockaddr_in addr_in);
 
 /**
- * Send stdin until EOF is received
- * @params[in] sockfd socket to send
- * @return 0 on succeed
- */
-int send_stdin(int sockfd);
-
-/**
  * Send file with filename
  * @params[in] filename name of file to send
  * @params[in] sockfd target socket file descriptor

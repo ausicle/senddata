@@ -10,6 +10,8 @@ FORMATS := $(SRCS) $(wildcard *.h)
 CC := clang
 CSTD := c99
 CFLAGS += -Wall -Wextra -pedantic -pedantic-errors -MMD -MP -std=$(CSTD)
+CFLAGS += $(shell pkg-config --cflags openssl)
+LDFLAGS += -lssl -lcrypto
 
 ANSI_COLOR_RED     := \033[0;31m
 ANSI_COLOR_GREEN   := \033[0;32m
@@ -23,7 +25,7 @@ ANSI_COLOR_RESET   := \033[0m
 
 $(TARGET): $(OBJS)
 	@printf "$(ANSI_COLOR_GREEN)--> Linking $@$(ANSI_COLOR_RESET)\n"
-	$(CC) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^
 $(OBJDIR)/%.o: %.c | $(OBJDIR)
 	@printf "$(ANSI_COLOR_GREEN)--> Compiling $@$(ANSI_COLOR_RESET)\n"
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -31,7 +33,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 format: $(FORMATS)
 	@printf "$(ANSI_COLOR_RED)--> Formatting$(ANSI_COLOR_RESET)\n"
-	clang-tidy --fix $^ -- -std=$(CSTD)
+	clang-tidy --fix $^ -- $(CFLAGS)
 	clang-format --verbose -i $^
 clean:
 	@printf "$(ANSI_COLOR_RED)--> Cleaning$(ANSI_COLOR_RESET)\n"

@@ -23,8 +23,6 @@
 #include <sys/sendfile.h>
 #endif
 
-extern int verbosity;
-
 int
 initialize_socket(void)
 {
@@ -137,16 +135,6 @@ start_server(int sockfd, struct sockaddr_in addr_in)
 }
 
 int
-send_stdin(int sockfd)
-{
-	char buf[1024];
-	while (fgets(buf, sizeof(buf), stdin) != NULL) {
-		send(sockfd, buf, strlen(buf), 0);
-	}
-	return 0;
-}
-
-int
 sendfile_name(const char *filename, int sockfd)
 {
 	int filefd;
@@ -242,10 +230,6 @@ write_socket_to_file(int sockfd, int fd)
 		}
 		write(fd, buf, bytes_received);
 		bytes_received_total += bytes_received;
-		if (verbosity) {
-			printf("Got %zu bytes, total %zd bytes\n", bytes_received,
-			       bytes_received_total);
-		}
 	}
 	return bytes_received_total;
 }

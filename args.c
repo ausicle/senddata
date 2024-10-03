@@ -4,10 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int verbosity = 0;
-
 int
-parse_args(int argc, char **argv, args_t *args)
+parse_args(int argc, char **argv, struct u_option *o)
 {
 	int opt;
 	/* Set mode and options */
@@ -17,15 +15,15 @@ parse_args(int argc, char **argv, args_t *args)
 	}
 	switch (argv[1][0]) {
 	case 'r':
-		args->action = RECEIVE;
+		o->action = RECEIVE;
 		break;
 	case 's':
-		args->action = SEND;
+		o->action = SEND;
 		if (argc < 3 || argv[2][0] == '-') {
 			print_help();
 			exit(EXIT_FAILURE);
 		}
-		args->network.address = argv[2];
+		o->net.addr = argv[2];
 		++argv;
 		--argc;
 		break;
@@ -35,26 +33,26 @@ parse_args(int argc, char **argv, args_t *args)
 	}
 	++argv;
 	--argc;
-	args->output = STDOUT;
-	while ((opt = getopt(argc, argv, "?::v::p:f:a:")) >= 0) {
+	o->output = STDOUT;
+	while ((opt = getopt(argc, argv, "?::e::p:f:a:")) >= 0) {
 		switch (opt) {
 		case '?':
 			print_help();
 			exit(0);
 			break;
 		case 'a':
-			args->network.address = optarg;
+			o->net.addr = optarg;
 			break;
-		case 'v':
-			verbosity = 1;
+		case 'e':
+			o->enc.algo = AES256;
 			break;
 		case 'p':
-			args->network.port = strtoul(optarg, NULL, 0);
+			o->net.port = strtoul(optarg, NULL, 0);
 			break;
 		case 'f':
-			args->filename = optarg;
-			args->input = READ_FILE;
-			args->output = SAVE_FILE;
+			o->filename = optarg;
+			o->input = READ_FILE;
+			o->output = SAVE_FILE;
 			break;
 		}
 	}

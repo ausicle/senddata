@@ -1,30 +1,34 @@
 #ifndef ARGS_H
 #define ARGS_H
-
-/**
- * Set verbosity to >0 for verbose output
- */
-extern int verbosity;
+#include <limits.h>
 
 /**
  * General address and port
  */
 struct netconfig_in {
-	char *address;
+	char *addr;
 	unsigned long port;
 };
 
-enum action_t { SEND, RECEIVE };
-enum input_t { STDIN, READ_FILE };
-enum output_t { STDOUT, SAVE_FILE };
+enum action { SEND, RECEIVE };
+enum input { STDIN, READ_FILE };
+enum output { STDOUT, SAVE_FILE };
 
-typedef struct {
-	enum action_t action;
-	enum input_t input;
-	enum output_t output;
+enum enc_algo { NONE, AES256 };
+
+struct encryption {
+	enum enc_algo algo;
+	unsigned char *key;
+};
+
+struct u_option {
+	enum action action;
+	enum input input;
+	enum output output;
 	char *filename;
-	struct netconfig_in network;
-} args_t;
+	struct encryption enc;
+	struct netconfig_in net;
+};
 
 /**
  * Parse args into args
@@ -33,6 +37,6 @@ typedef struct {
  * @param[out] args variable stored parsed data
  * @return 0 on succeed
  */
-int parse_args(int argc, char **argv, args_t *args);
+int parse_args(int argc, char **argv, struct u_option *o);
 
 #endif
