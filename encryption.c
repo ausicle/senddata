@@ -14,7 +14,6 @@ void
 handle_errors(void)
 {
 	ERR_print_errors_fp(stderr);
-	abort();
 }
 
 int
@@ -40,17 +39,21 @@ text_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
 
 	if (!ctx) {
 		handle_errors();
+		return -1;
 	}
 	if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv) != 1) {
 		handle_errors();
+		return -1;
 	}
 	if (EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len) !=
 	    1) {
 		handle_errors();
+		return -1;
 	}
 	ciphertext_len = len;
 	if (EVP_EncryptFinal_ex(ctx, ciphertext + len, &len) != 1) {
 		handle_errors();
+		return -1;
 	}
 	ciphertext_len += len;
 
@@ -67,17 +70,21 @@ text_decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
 
 	if (!ctx) {
 		handle_errors();
+		return -1;
 	}
 	if (EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv) != 1) {
 		handle_errors();
+		return -1;
 	}
 	if (EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len) !=
 	    1) {
 		handle_errors();
+		return -1;
 	}
 	plaintext_len = len;
 	if (EVP_DecryptFinal_ex(ctx, plaintext + len, &len) != 1) {
 		handle_errors();
+		return -1;
 	}
 	plaintext_len += len;
 
@@ -85,7 +92,7 @@ text_decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
 	return plaintext_len;
 }
 
-void
+int
 file_encrypt(unsigned char *key, const char *input_filename,
              const char *output_filename)
 {
@@ -106,6 +113,7 @@ file_encrypt(unsigned char *key, const char *input_filename,
 	// Generate a random IV and write it to the output file
 	if (!RAND_bytes(iv, AES_BLOCK_SIZE)) {
 		handle_errors();
+		return -1;
 	}
 	fwrite(iv, 1, AES_BLOCK_SIZE, out_file);
 
@@ -117,9 +125,10 @@ file_encrypt(unsigned char *key, const char *input_filename,
 
 	fclose(in_file);
 	fclose(out_file);
+	return 0;
 }
 
-void
+int
 file_decrypt(unsigned char *key, const char *input_filename,
              const char *output_filename)
 {
@@ -142,9 +151,13 @@ file_decrypt(unsigned char *key, const char *input_filename,
 	// Write plaintext to target file until have nothing left
 	while ((bytes_read = fread(buffer, 1, sizeof(buffer), in_file)) > 0) {
 		plaintext_len = text_decrypt(buffer, bytes_read, key, iv, plaintext);
+		if (plaintext_len < 0) {
+			return -1;
+		}
 		fwrite(plaintext, 1, plaintext_len, out_file);
 	}
 
 	fclose(in_file);
 	fclose(out_file);
+	return 0;
 }

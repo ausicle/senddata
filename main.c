@@ -135,7 +135,18 @@ main(int argc, char **argv)
 			}
 			close(filefd);
 			if (o.enc.algo == AES256) {
-				file_decrypt(o.enc.key, filename_encrypted, o.filename);
+				if (file_decrypt(o.enc.key, filename_encrypted, o.filename) <
+				    0) {
+					puts("decrypt file failed");
+					unlink(o.filename);
+					fputs("Do you want to remove encrypted file? [y/n]",
+					      stdout);
+					fgets(buf, sizeof(buf), stdin);
+					if (strncmp(buf, "y\n", 2) == 0) {
+						unlink(filename_encrypted);
+					}
+					return 1;
+				}
 				unlink(filename_encrypted);
 			}
 			break;
