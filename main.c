@@ -3,7 +3,6 @@
 #include "networking.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,7 +24,6 @@ struct sockaddr_in addr_in;
 unsigned char key[SHA256_DIGEST_LENGTH];
 char filename_encrypted[256];
 char buf[1024];
-unsigned char iv[16];
 
 int
 main(int argc, char **argv)
@@ -36,11 +34,6 @@ main(int argc, char **argv)
 	if (o.enc.algo != NONE) {
 		get_key(key);
 		o.enc.key = key;
-	}
-	if (o.enc.algo == AES256) {
-		if (RAND_bytes(iv, sizeof(iv)) != 1) {
-			return 1;
-		}
 		strncpy(filename_encrypted, o.filename, sizeof(filename_encrypted));
 		strncat(filename_encrypted, ENCRYPTED_FILE_EXT,
 		        sizeof(filename_encrypted) - sizeof(ENCRYPTED_FILE_EXT));
