@@ -17,12 +17,14 @@ int initialize_socket(void);
 int resolve_addr(char *addr_str, struct sockaddr_in *addr_in);
 
 /**
- * Initialize sockaddr_in with address and port
+ * Initialize addr_in with address and port
+ * @params[out] addr_in pointer to struct addr_in
  * @params[in] addr_str string of address i.e. "127.0.0.1"
  * @params[in] port i.e. 43337
  * @return sockaddr_in with port and address setted
  */
-struct sockaddr_in initialize_addr_in(char *addr_str, in_port_t port);
+int initialize_addr_in(struct sockaddr_in *addr_in, char *addr_str,
+                       in_port_t port);
 
 /**
  * Bind, listen and accept sockfd.

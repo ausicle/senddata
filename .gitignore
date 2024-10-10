@@ -1,6 +1,9 @@
 # MacOS
 .DS_Store
 
+# IDEs
+.vscode
+
 # TEMPLATE FROM https://github.com/github/gitignore/blob/main/C.gitignore
 ## Prerequisites
 *.d

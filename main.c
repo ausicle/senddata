@@ -1,5 +1,8 @@
 #include "args.h"
 #include "encryption.h"
+#if USE_GTK == 4
+#include "gtk.h"
+#endif
 #include "networking.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -28,6 +31,12 @@ char buf[1024];
 int
 main(int argc, char **argv)
 {
+#if USE_GTK == 4
+	if (argc == 1) {
+		start_gui(argc, argv);
+		return 0;
+	}
+#endif
 	/* Parse arguments */
 	struct u_option o = {.net = {.addr = "0", .port = DEFAULT_PORT}};
 	parse_args(argc, argv, &o);
@@ -41,7 +50,9 @@ main(int argc, char **argv)
 
 	/* Initialize socket */
 	sockfd = initialize_socket();
-	addr_in = initialize_addr_in(o.net.addr, o.net.port);
+	if (initialize_addr_in(&addr_in, o.net.addr, o.net.port) != 0) {
+		return 2;
+	}
 	if (sockfd < 0) {
 		perror("cannot create socket");
 		return 0;
@@ -73,7 +84,7 @@ main(int argc, char **argv)
 			case AES256:
 				file_encrypt(o.enc.key, o.filename, filename_encrypted);
 				if (sendfile_name(filename_encrypted, sockfd) < 0) {
-					perror("file cannot be sent");
+					perror("file cannot be encrypted");
 				}
 				unlink(filename_encrypted);
 				break;

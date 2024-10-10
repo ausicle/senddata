@@ -90,16 +90,15 @@ resolve_addr(char *addr_str, struct sockaddr_in *addr_in)
 	return 0;
 }
 
-struct sockaddr_in
-initialize_addr_in(char *addr_str, in_port_t port)
+int
+initialize_addr_in(struct sockaddr_in *addr_in, char *addr_str, in_port_t port)
 {
-	struct sockaddr_in addr_in;
-	addr_in.sin_family = AF_INET;
-	if (resolve_addr(addr_str, &addr_in) < 0) {
-		exit(EXIT_FAILURE);
+	addr_in->sin_family = AF_INET;
+	if (resolve_addr(addr_str, addr_in) < 0) {
+		return -1;
 	}
-	addr_in.sin_port = htons(port);
-	return addr_in;
+	addr_in->sin_port = htons(port);
+	return 0;
 }
 
 int
